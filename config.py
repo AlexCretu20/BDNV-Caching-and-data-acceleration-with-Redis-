@@ -10,8 +10,13 @@ MONGO_URI = ("mongodb://localhost:27017/")
 DB = "project"
 
 
-redis = redis.Redis(host = REDIS_HOST, port = REDIS_PORT, db = 0, decode_responses = True)
+redis_restaurants = redis.Redis(host = REDIS_HOST, port = REDIS_PORT, db = 0, decode_responses = True)
+redis_cafes = redis.Redis(host = REDIS_HOST, port = REDIS_PORT, db = 1, decode_responses = True)
+redis_favorites = redis.Redis(host = REDIS_HOST, port = REDIS_PORT, db = 2, decode_responses = True)
+
 
 mongo_client = MongoClient(MONGO_URI)
 mongo_db = mongo_client[DB]
-mongo_collection = mongo_db["restaurants"]
+restaurant_collection = mongo_db["restaurants"]
+cafes_collection = mongo_db["cafes"]
+favorites_collection = mongo_db["favorites"]
