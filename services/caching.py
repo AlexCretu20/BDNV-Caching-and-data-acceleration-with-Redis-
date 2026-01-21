@@ -46,7 +46,7 @@ def get_restaurants_cash_aside(city,user_x=None, user_y=None):
             exporter.update_memory_usage("restaurants", int(used))
         except Exception:
             pass
-        
+
     if user_x and user_y:
         try:
             restaurants_map = Map.search_close(redis_restaurants,map_key,user_x, user_y)
@@ -93,7 +93,7 @@ class CafeReadThrough:
                 redis_cafes.setex(cache_key, 1800, json.dumps(cafes))
                 Map.create_map(redis_cafes, map_key, cafes)
                 source = "extern api"
-                
+
             try:
                 used = redis_cafes.info().get("used_memory", 0)
                 exporter.update_memory_usage("cafes", int(used))
@@ -105,7 +105,7 @@ class CafeReadThrough:
 
         if cafes_map:
             return cafes_map, f"{source} and the date was sorted"
-        
+
         return cafes, source
     
 class FavoritesWriteThrough:

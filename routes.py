@@ -15,6 +15,9 @@ from services.redis_structures import (
     list_favorite_cities,  # SET
     favorites_stream       # STREAM
 )
+from flask import request, jsonify, Blueprint
+from services.top_places import top_cafes, top_restaurants
+from services.caching import get_restaurants_cash_aside, CafeReadThrough, FavoritesWriteThrough
 
 api = Blueprint('api', __name__)
 
@@ -135,3 +138,29 @@ def favorite_cities():
 def favorite_events():
     n = request.args.get("last", 20)
     return jsonify({"events": favorites_stream(n)})
+
+@api.route('/topRestaurants', methods=['GET'])
+def get_top_resturants():
+    city = request.args.get('city')
+    limit = request.args.get('limit', default = 5, type = int)
+
+    data, source = top_restaurants(city, limit)
+    return jsonify({
+        "source": source,
+        "count": len(data),
+        "Tops": data
+    })
+
+
+@api.route('/topCafes', methods=['GET'])
+def get_top_cafes():
+    city = request.args.get('city')
+    limit = request.args.get('limit', default = 5, type = int)
+
+    data, source = top_cafes(city, limit)
+    return jsonify({
+        "source": source,
+        "count": len(data),
+        "Tops": data
+    })
+
