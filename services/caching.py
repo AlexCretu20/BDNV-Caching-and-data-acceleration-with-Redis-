@@ -1,77 +1,112 @@
 from services.extern_api import get_info
+from services.geoservice import Map
 from config import redis_favorites, redis_cafes, redis_restaurants, favorites_collection
 import json
 import time
-# from services.prometheus_exporter import exporter
+from services.prometheus_exporter import exporter
 
-def get_restaurants_cash_aside(city):
+
+def get_restaurants_cash_aside(city,user_x=None, user_y=None):
     cache_key = f"Restaurants:{city.lower()}"
+    map_key = f"Map_restaurants"
 
     print(f"Fisrt check in redis to see if I have the restaurant from {city}")
 
     cached_data = redis_restaurants.get(cache_key)
     t_cache_start = time.time()
     cache_latency = time.time() - t_cache_start
+    restaurants = []
+    restaurants_map = None
+    source = "Unknown"
 
     if cached_data:
         print("Cache hit")
-        # exporter.record_hit(pattern="cache_aside", scenario="restaurants", latency_seconds=cache_latency)
-        return json.loads(cached_data), "redis_cache_aside"
-    
-    print("Use external api ")
-    restaurants = get_info(city,"restaurant")
-    t_db_start = time.time()
-    db_latency = time.time() - t_db_start
-    # exporter.record_miss("cache_aside", "restaurants", cache_latency_seconds=cache_latency, db_latency_seconds=db_latency)
+        restaurants = json.loads(cached_data)
+        source = "redis_cache_aside"
+        exporter.record_hit(pattern="cache_aside", scenario="restaurants", latency_seconds=cache_latency)
+    else :
+        print("Use external api ")
+        restaurants = get_info(city,"restaurant")
+        t_db_start = time.time()
+        db_latency = time.time() - t_db_start
+        exporter.record_miss("cache_aside", "restaurants", cache_latency_seconds=cache_latency, db_latency_seconds=db_latency)
 
-    ## acum actualizam cached
+        ## acum actualizam cached
 
-    if restaurants:
-        print("We save in cached for half of hour")
-        restaurant_json = json.dumps(restaurants)
+        if restaurants:
+            print("We save in cached for half of hour")
+            restaurant_json = json.dumps(restaurants)
 
-        redis_restaurants.setex(cache_key,1800, restaurant_json)
-    try:
-        used = redis_restaurants.info().get("used_memory", 0)
-        # exporter.update_memory_usage("restaurants", int(used))
-    except Exception:
-        pass
+            redis_restaurants.setex(cache_key,1800, restaurant_json)
+            Map.create_map(redis_restaurants, map_key, restaurants)
+            source = "extern"
 
-    return restaurants, "extern"
+        try:
+            used = redis_restaurants.info().get("used_memory", 0)
+            exporter.update_memory_usage("restaurants", int(used))
+        except Exception:
+            pass
+        
+    if user_x and user_y:
+        try:
+            restaurants_map = Map.search_close(redis_restaurants,map_key,user_x, user_y)
+        except Exception :
+            print("Could not find the near places")
+            restaurants_map = None
+
+    if restaurants_map:
+        return restaurants_map, f"{source} and the date was sorted"
+    return restaurants, source
+
 
 class CafeReadThrough:
-    def get(city):
+    def get(city, user_x = None, user_y = None):
         cache_key = f"cafe:{city.lower()}"
+        map_key = f"Map_cafes"
         print(f"Looking after cafes in  {city}")
 
         cached_data = redis_cafes.get(cache_key)
         t_cache_start = time.time()
         cache_latency = time.time() - t_cache_start
 
+        cafes = []
+        cafes_map = None
+        source = "Unknown"
+
+
         if cached_data:
             print("Cache hit ")
-            # exporter.record_hit(pattern="read_through", scenario="cafes", latency_seconds=cache_latency)
-            return json.loads(cached_data), "redis_read_through"
+            cafes = json.loads(cached_data)
+            source = "redis_read_through"
+            exporter.record_hit(pattern="read_through", scenario="cafes", latency_seconds=cache_latency)
+        else:
+            print("Cached miss")
 
-        print("Cached miss")
+            cafes = get_info(city, "cafe")
+            t_db_start = time.time()
+            db_latency = time.time() - t_db_start
 
-        cafes = get_info(city, "cafe")
-        t_db_start = time.time()
-        db_latency = time.time() - t_db_start
+            exporter.record_miss("read_through", "cafes", cache_latency_seconds=cache_latency, db_latency_seconds=db_latency)
 
-        # exporter.record_miss("read_through", "cafes", cache_latency_seconds=cache_latency, db_latency_seconds=db_latency)
+            if cafes:
+                print("Add the cafes in cache")
+                redis_cafes.setex(cache_key, 1800, json.dumps(cafes))
+                Map.create_map(redis_cafes, map_key, cafes)
+                source = "extern api"
+                
+            try:
+                used = redis_cafes.info().get("used_memory", 0)
+                exporter.update_memory_usage("cafes", int(used))
+            except Exception:
+                pass
 
-        if cafes:
-            print("Add the cafes in cache")
-            redis_cafes.setex(cache_key, 1800, json.dumps(cafes))
+        if user_x and user_y:
+            cafes_map = Map.search_close(redis_cafes, map_key, user_x, user_y)
 
-        try:
-            used = redis_cafes.info().get("used_memory", 0)
-            # exporter.update_memory_usage("cafes", int(used))
-        except Exception:
-            pass
-
-        return cafes, "extern api"
+        if cafes_map:
+            return cafes_map, f"{source} and the date was sorted"
+        
+        return cafes, source
     
 class FavoritesWriteThrough:
     def add_favorites(user_id, place_info):

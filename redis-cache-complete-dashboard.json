@@ -648,26 +648,6 @@
     "options": {
       "legend": { "displayMode": "list", "placement": "bottom" }
     }
-  },
-  {
-    "id": 23,
-    "type": "timeseries",
-    "title": "Latency Under Load (p95) - Cache Read",
-    "datasource": "Prometheus",
-    "gridPos": { "x": 0, "y": 74, "w": 24, "h": 8 },
-    "targets": [
-      {
-        "refId": "A",
-        "expr": "histogram_quantile(0.95, sum(rate(cache_read_latency_seconds_bucket[1m])) by (le))",
-        "legendFormat": "cache p95"
-      }
-    ],
-    "fieldConfig": {
-      "defaults": { "unit": "s" }
-    },
-    "options": {
-      "legend": { "displayMode": "list", "placement": "bottom" }
-    }
   }
   ]
 }
