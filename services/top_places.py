@@ -1,4 +1,4 @@
-from config import redis_cafes, redis_restaurants, CACHE_TTL, MAX_MEM
+from config import redis_cafes, redis_restaurants, CACHE_TTL
 from services.extern_api import get_info
 import json
 import time
