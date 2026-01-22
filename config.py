@@ -17,6 +17,7 @@ redis_restaurants = redis.Redis(host = REDIS_HOST, port = REDIS_PORT, db = 0, de
 redis_cafes = redis.Redis(host = REDIS_HOST, port = REDIS_PORT, db = 1, decode_responses = True)
 redis_favorites = redis.Redis(host = REDIS_HOST, port = REDIS_PORT, db = 2, decode_responses = True)
 
+
 mongo_client = MongoClient(MONGO_URI)
 mongo_db = mongo_client[DB]
 restaurant_collection = mongo_db["restaurants"]

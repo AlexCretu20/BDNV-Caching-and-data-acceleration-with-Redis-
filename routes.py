@@ -108,6 +108,24 @@ def get_favorites():
         "favorites": data
     })
 
+@api.route('/deleteFavorite', methods=['DELETE'])
+def delete_favorite():
+    user_id = request.args.get('user_id')
+    place_name = request.args.get('place_name')
+
+    if not user_id or not place_name:
+        return jsonify({
+            "error": "Missing parameters",
+            "Hint": "Use /deleteFavorite?user_id=123&place_name=Le%20Severo"
+        }), 400
+
+    FavoritesWriteThrough.delete_favorite(user_id, place_name)
+
+    return jsonify({
+        "status": "success",
+        "message": "The place was deleted and cache invalidated"
+    }), 200
+
 @api.get("/ranking/cities")
 def get_top_cities():
     n = request.args.get("top", 10)
@@ -163,4 +181,3 @@ def get_top_cafes():
         "count": len(data),
         "Tops": data
     })
-
