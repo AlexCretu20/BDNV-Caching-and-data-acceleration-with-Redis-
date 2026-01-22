@@ -59,7 +59,7 @@ Atunci cand un utilizator adauga un loc favorit prin endpoint-ul `POST /addFavor
 - Pentru realizarea unui clasament al oraselor in functie de numarul de cautari este folosit un sorted set, care permite incrementarea scorului fiecarui oras.
 - Sunt folosite Redis Streams pentru a inregistra evenimente de tip add sau remove asupra oraselor favorite, oferind un mecanism de logare a actiunilor.
 - Pentru cautari de proximitate este utilizata functionalitatea geospatiala a Redis, permitand identificarea locatiilor aflate in apropierea unei pozitii date.
-- 
+  
 <img width="602" height="338" alt="image" src="https://github.com/user-attachments/assets/e8b2c6ec-63a0-4dcd-bbb0-a1e5b29c5573" />
 <img width="602" height="338" alt="image" src="https://github.com/user-attachments/assets/2294f844-3450-47f4-be7e-fe46e37af9d9" />
 <img width="602" height="338" alt="image" src="https://github.com/user-attachments/assets/c3f20f37-43ae-47c2-804d-9fff0f99acd7" />
@@ -117,4 +117,5 @@ Approx RPS: 3.39
 ```
 
 link Demo partea 1: https://youtu.be/jlaBPiAnJEE
+
 link Demo partea 2: https://youtu.be/F7T2mBYGy2A
